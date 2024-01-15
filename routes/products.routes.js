@@ -7,6 +7,7 @@ import {
   getProducts,
   updateProduct,
   prouctsCount,
+  gallery,
 } from "../controller/products.controller.js";
 import multer from "multer";
 
@@ -42,5 +43,6 @@ router
   .delete(deleteProduct)
   .get(getProductById)
   .put(upload.single("image"), updateProduct);
+router.route("/gallery/:id").put(upload.array("images", 4), gallery);
 
 export default router;

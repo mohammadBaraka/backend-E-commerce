@@ -8,9 +8,6 @@ export const jwtVerify = (req, res, next) => {
       if (err) return res.status(400).json("Access denied");
       req.userId = decoded._id;
       req.isAdmin = decoded.isAdmin;
-      if (req.url === "/dashboard" && !decoded.isAdmin) {
-        res.status(400).json("Your Aere Not Admin");
-      }
       next();
     });
   } catch (error) {

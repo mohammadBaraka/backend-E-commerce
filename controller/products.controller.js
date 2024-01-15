@@ -162,7 +162,36 @@ export const updateProduct = async (req, res) => {
       .json({ status: httpStatus.cdeIntervar, message: err.message });
   }
 };
+export const gallery = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(httpStatus.codeBadRequest).send("Invalid Product Id");
+    }
 
+    const files = req.files;
+    let imagesPath = [];
+    const basePase = `${req.protocol}://${req.get("host")}/public/uploads/`;
+    if (files) {
+      files.map((file) => imagesPath.push(`${basePase}${file.fileName}`));
+      const product = await Product.findByIdAndUpdate(
+        req.params.id,
+        {
+          images: imagesPath,
+        },
+        { new: true }
+      );
+      if (!product) {
+        return res
+          .status(httpStatus.codeNotFound)
+          .json({ message: "product not found" });
+      }
+    }
+  } catch (error) {
+    res
+      .status(httpStatus.cdeIntervar)
+      .json({ status: httpStatus.cdeIntervar, message: err.message });
+  }
+};
 export const deleteProduct = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(httpStatus.codeBadRequest).send("Invalid Product Id");

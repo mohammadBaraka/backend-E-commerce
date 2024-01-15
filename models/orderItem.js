@@ -11,6 +11,7 @@ const orderItemSchema = new Schema({
     required: true,
   },
 });
+
 orderItemSchema.virtual("id").get(function () {
   return this._id.toHexString();
 });

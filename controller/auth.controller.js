@@ -94,6 +94,7 @@ export const checkLogedIn = (req, res) => {
     status: httpStatus.SUCCESS,
     message: "Logedin successfully",
     user: req.isAdmin,
+    userId: req.userId,
   });
 };
 
