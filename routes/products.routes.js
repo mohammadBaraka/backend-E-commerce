@@ -38,11 +38,11 @@ const router = express.Router();
 router.route("/count").get(prouctsCount);
 router.route("/featured/:count").get(getFeturedProducts);
 router.route("/").get(getProducts).post(upload.single("image"), createProduct);
+router.route("/gallery/:id").put(upload.array("images", 4), gallery);
 router
   .route("/:id")
   .delete(deleteProduct)
   .get(getProductById)
   .put(upload.single("image"), updateProduct);
-router.route("/gallery/:id").put(upload.array("images", 4), gallery);
 
 export default router;

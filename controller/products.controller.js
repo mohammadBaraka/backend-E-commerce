@@ -3,29 +3,51 @@ import Category from "../models/category.js";
 import mongoose from "mongoose";
 import { httpStatus } from "../helpers/httpStatus.js";
 
+//?=================GET ALL PRODUCTS ======================
 export const getProducts = async (req, res) => {
   let categories = {};
+  let count = 0;
   if (req.query.categories) {
     categories = { category: req.query.categories.split(",") };
+    count = await Product.countDocuments(categories);
+  } else {
+    count = await Product.countDocuments();
   }
+  //?===========Paginate==============
+  const query = req.query;
+  const limit = query.limit || 10;
+  const page = query.page || 1;
+  const skip = (page - 1) * limit;
+  const total = Math.ceil(count / limit);
+
   try {
-    const product = await Product.find(categories).populate("category");
+    const product = await Product.find(categories)
+      .sort({ _id: -1 })
+      .populate("category")
+      .limit(limit)
+      .skip(skip);
     if (!product) {
       res
         .status(httpStatus.codeNotFound)
         .json({ message: "Categories not found" });
     }
+
     const response = {
       status: httpStatus.SUCCESS,
       data: product,
+      totalProducts: total,
+      currentPage: Number(page),
     };
     res.status(httpStatus.codeSuccess).json(response);
   } catch (err) {
-    res
-      .status(httpStatus.cdeIntervar)
-      .json({ status: httpStatus.FAIL, message: err.message });
+    res.status(httpStatus.cdeIntervar).json({
+      status: httpStatus.FAIL,
+      message: err.message,
+    });
   }
 };
+//?=================GET A PRODUCT BY ID ======================
+
 export const getProductById = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(httpStatus.codeBadRequest).send("Invalid Product Id");
@@ -101,6 +123,7 @@ export const createProduct = async (req, res) => {
   }
 };
 
+//?=================UPDATE A PRODUCT ======================
 export const updateProduct = async (req, res) => {
   try {
     const { name, description, brand, price, countInstock } = req.body;
@@ -115,11 +138,8 @@ export const updateProduct = async (req, res) => {
     const category = await Category.findById(req.body.category);
     if (!category)
       return res.status(httpStatus.codeBadRequest).send("Invalid Category");
-    if (!req.file)
-      return res
-        .status(httpStatus.codeBadRequest)
-        .json({ message: "No Image Uploaded!" });
-    const fileName = req.file.filename;
+
+    const fileName = req?.file?.filename;
     const basePase = `${req.protocol}://${req.get(
       "host"
     )}/public/uploads/${fileName}`;
@@ -130,7 +150,7 @@ export const updateProduct = async (req, res) => {
         name,
         description,
         richDescription: req.body.richDescription,
-        image: basePase,
+        image: req.body.image || basePase,
         brand,
         price,
         category: req.body.category,
@@ -141,9 +161,6 @@ export const updateProduct = async (req, res) => {
       },
       { new: true }
     );
-
-    // Check if the update was successful
-
     if (!product) {
       return res
         .status(httpStatus.codeNotFound)
@@ -162,31 +179,38 @@ export const updateProduct = async (req, res) => {
       .json({ status: httpStatus.cdeIntervar, message: err.message });
   }
 };
+
+//?=================UPLOAD MORE IMAGES ======================
 export const gallery = async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
       return res.status(httpStatus.codeBadRequest).send("Invalid Product Id");
     }
+    let imagesPath = [];
 
     const files = req.files;
-    let imagesPath = [];
+    console.log("files", files);
     const basePase = `${req.protocol}://${req.get("host")}/public/uploads/`;
+    console.log("🚀 ~ gallery ~ basePase:", basePase);
+
     if (files) {
-      files.map((file) => imagesPath.push(`${basePase}${file.fileName}`));
-      const product = await Product.findByIdAndUpdate(
-        req.params.id,
-        {
-          images: imagesPath,
-        },
-        { new: true }
-      );
-      if (!product) {
-        return res
-          .status(httpStatus.codeNotFound)
-          .json({ message: "product not found" });
-      }
+      files.map((file) => imagesPath.push(`${basePase}${file.filename}`));
     }
-  } catch (error) {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      {
+        images: imagesPath,
+      },
+      { new: true }
+    );
+
+    if (!product) {
+      return res
+        .status(httpStatus.codeNotFound)
+        .json({ message: "product not found" });
+    }
+    res.send(product);
+  } catch (err) {
     res
       .status(httpStatus.cdeIntervar)
       .json({ status: httpStatus.cdeIntervar, message: err.message });
