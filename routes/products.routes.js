@@ -8,6 +8,7 @@ import {
   updateProduct,
   prouctsCount,
   gallery,
+  searchOnProducts,
 } from "../controller/products.controller.js";
 import multer from "multer";
 
@@ -39,6 +40,7 @@ router.route("/count").get(prouctsCount);
 router.route("/featured/:count").get(getFeturedProducts);
 router.route("/").get(getProducts).post(upload.single("image"), createProduct);
 router.route("/gallery/:id").put(upload.array("images", 4), gallery);
+router.route("/search").get(searchOnProducts);
 router
   .route("/:id")
   .delete(deleteProduct)

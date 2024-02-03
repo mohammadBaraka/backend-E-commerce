@@ -46,6 +46,49 @@ export const getProducts = async (req, res) => {
     });
   }
 };
+
+export const searchOnProducts = async (req, res) => {
+  //?===========Paginate==============
+  const query = req.query;
+  const limit = query.limit || 10;
+  const page = query.page || 1;
+  const skip = (page - 1) * limit;
+
+  const search = req.query.name;
+  if (search.length === 0) {
+    return res
+      .status(httpStatus.codeNotFound)
+      .json({ message: "Categories not found" });
+  }
+  try {
+    const product = await Product.find({
+      $or: [{ name: { $regex: search, $options: "i" } }],
+    })
+      .sort({ _id: -1 })
+      .populate("category")
+      .limit(limit)
+      .skip(skip);
+    if (!product) {
+      res
+        .status(httpStatus.codeNotFound)
+        .json({ message: "Categories not found" });
+    }
+    console.log("🚀 ~ searchOnProducts ~ product:", product.length);
+
+    const response = {
+      status: httpStatus.SUCCESS,
+      data: product,
+      totalProducts: Math.ceil(product.length / limit),
+      currentPage: Number(page),
+    };
+    res.status(httpStatus.codeSuccess).json(response);
+  } catch (err) {
+    res.status(httpStatus.cdeIntervar).json({
+      status: httpStatus.FAIL,
+      message: err.message,
+    });
+  }
+};
 //?=================GET A PRODUCT BY ID ======================
 
 export const getProductById = async (req, res) => {
