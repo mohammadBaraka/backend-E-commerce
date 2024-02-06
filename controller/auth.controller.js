@@ -104,6 +104,8 @@ export const checkLogedIn = (req, res) => {
 export const logout = (req, res) => {
   res.clearCookie("access_token", {
     httpOnly: true,
+    sameSite: "none",
+    secure: true,
   });
   res.send("ok");
 };
