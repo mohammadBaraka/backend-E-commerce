@@ -73,7 +73,6 @@ export const searchOnProducts = async (req, res) => {
         .status(httpStatus.codeNotFound)
         .json({ message: "Categories not found" });
     }
-    console.log("🚀 ~ searchOnProducts ~ product:", product.length);
 
     const response = {
       status: httpStatus.SUCCESS,
@@ -232,9 +231,7 @@ export const gallery = async (req, res) => {
     let imagesPath = [];
 
     const files = req.files;
-    console.log("files", files);
     const basePase = `${req.protocol}://${req.get("host")}/public/uploads/`;
-    console.log("🚀 ~ gallery ~ basePase:", basePase);
 
     if (files) {
       files.map((file) => imagesPath.push(`${basePase}${file.filename}`));
