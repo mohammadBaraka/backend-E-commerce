@@ -31,9 +31,9 @@ app.options("*", cors());
 app.use(cookieParser());
 app.use(errorHandling);
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-app.use("/public/uploads", express.static(`${__dirname}/public/uploads`));
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
+// app.use("/public/uploads", express.static(`${__dirname}/public/uploads`));
 //?=================ROUTES=================
 const apiUrl = process.env.API_URL;
 import productRouter from "./routes/products.routes.js";
