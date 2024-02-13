@@ -2,7 +2,7 @@ import Product from "../models/products.js";
 import Category from "../models/category.js";
 import mongoose from "mongoose";
 import { httpStatus } from "../helpers/httpStatus.js";
-
+import cloudinary from "../helpers/cloudinay.js";
 //?=================GET ALL PRODUCTS ======================
 export const getProducts = async (req, res) => {
   let categories = {};
@@ -114,6 +114,66 @@ export const getProductById = async (req, res) => {
 };
 
 //?=================CRETE A PRODUCT======================
+// export const createProduct = async (req, res) => {
+//   try {
+//     const { name, description, brand, price, countInstock } = req.body;
+//     if (!name || !description || !brand || !price || !countInstock) {
+//       return res
+//         .status(httpStatus.codeBadRequest)
+//         .json({ message: "Missing or invalid fields" });
+//     }
+
+//     const category = await Category.findById(req.body.category);
+//     if (!category)
+//       return res
+//         .status(httpStatus.codeBadRequest)
+//         .json({ message: "Invalid Category" });
+
+//     if (!req.file)
+//       return res
+//         .status(httpStatus.codeBadRequest)
+//         .json({ message: "No Image Uploaded!" });
+
+//     const fileName = req.file.filename;
+//     const basePase = `${req.protocol}://${req.get(
+//       "host"
+//     )}/public/uploads/${fileName}`;
+//     const cld = cloudinary.uploader.upload(
+//       fileName,
+//       { public_id: "olympic_flag" },
+//       function (error, result) {
+//         console.log(result);
+//       }
+//     );
+//     console.log("Path", req.file.path);
+//     const newProduct = new Product({
+//       name,
+//       description,
+//       richDescription: req.body.richDescription || "", // Handle optional fields
+//       image: basePase,
+//       brand,
+//       price,
+//       category: req.body.category,
+//       countInstock,
+//       rating: req.body.rating || 0, // Example: Set default value if not provided
+//       numReviews: req.body.numReviews || 0, // Similar to rating
+//       isFeatured: req.body.isFeatured || false,
+//     });
+//     await newProduct.save();
+
+//     const response = {
+//       status: httpStatus.SUCCESS,
+//       message: "Product created successfully",
+//       data: newProduct,
+//     };
+//     res.send(response);
+//   } catch (err) {
+//     res
+//       .status(httpStatus.cdeIntervar)
+//       .json({ status: httpStatus.FAIL, message: err.message });
+//   }
+// };
+
 export const createProduct = async (req, res) => {
   try {
     const { name, description, brand, price, countInstock } = req.body;
@@ -133,21 +193,26 @@ export const createProduct = async (req, res) => {
       return res
         .status(httpStatus.codeBadRequest)
         .json({ message: "No Image Uploaded!" });
-    const fileName = req.file.filename;
-    const basePase = `${req.protocol}://${req.get(
-      "host"
-    )}/public/uploads/${fileName}`;
+
+    const fileName = req.file.path; // Use the correct file path
+    const uploadedImage = await cloudinary.uploader.upload(fileName, {
+      public_id: req.file.filename,
+    });
+
+    // const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
+    const image = uploadedImage.secure_url; // Get the secure URL of the uploaded image from Cloudinary
+
     const newProduct = new Product({
       name,
       description,
-      richDescription: req.body.richDescription || "", // Handle optional fields
-      image: basePase,
+      richDescription: req.body.richDescription || "",
+      image,
       brand,
       price,
       category: req.body.category,
       countInstock,
-      rating: req.body.rating || 0, // Example: Set default value if not provided
-      numReviews: req.body.numReviews || 0, // Similar to rating
+      rating: req.body.rating || 0,
+      numReviews: req.body.numReviews || 0,
       isFeatured: req.body.isFeatured || false,
     });
     await newProduct.save();
@@ -160,7 +225,7 @@ export const createProduct = async (req, res) => {
     res.send(response);
   } catch (err) {
     res
-      .status(httpStatus.cdeIntervar)
+      .status(httpStatus.cdeIntervar) // Corrected status code
       .json({ status: httpStatus.FAIL, message: err.message });
   }
 };
@@ -181,18 +246,24 @@ export const updateProduct = async (req, res) => {
     if (!category)
       return res.status(httpStatus.codeBadRequest).send("Invalid Category");
 
-    const fileName = req?.file?.filename;
-    const basePase = `${req.protocol}://${req.get(
-      "host"
-    )}/public/uploads/${fileName}`;
+    // const fileName = req?.file?.filename;
+    // const basePase = `${req.protocol}://${req.get(
+    //   "host"
+    // )}/public/uploads/${fileName}`;
+    const fileName = req.file.path; // Use the correct file path
+    const uploadedImage = await cloudinary.uploader.upload(fileName, {
+      public_id: req.file.filename,
+    });
 
+    // const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
+    const image = uploadedImage.secure_url; // Get the secure URL of the uploaded image from Cloudinary
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       {
         name,
         description,
         richDescription: req.body.richDescription,
-        image: req.body.image || basePase,
+        image: req.body.image || image,
         brand,
         price,
         category: req.body.category,
@@ -231,11 +302,21 @@ export const gallery = async (req, res) => {
     let imagesPath = [];
 
     const files = req.files;
-    const basePase = `${req.protocol}://${req.get("host")}/public/uploads/`;
-
-    if (files) {
-      files.map((file) => imagesPath.push(`${basePase}${file.filename}`));
+    if (!files || files.length === 0) {
+      return res.status(httpStatus.codeBadRequest).send("No images uploaded");
     }
+
+    const uploadedImages = await Promise.all(
+      files.map(async (file) => {
+        const uploadedImage = await cloudinary.uploader.upload(file.path, {
+          public_id: file.filename,
+        });
+        return uploadedImage.secure_url;
+      })
+    );
+
+    uploadedImages.forEach((imageUrl) => imagesPath.push(imageUrl));
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       {
@@ -247,13 +328,16 @@ export const gallery = async (req, res) => {
     if (!product) {
       return res
         .status(httpStatus.codeNotFound)
-        .json({ message: "product not found" });
+        .json({ message: "Product not found" });
     }
     res.send(product);
   } catch (err) {
     res
-      .status(httpStatus.cdeIntervar)
-      .json({ status: httpStatus.cdeIntervar, message: err.message });
+      .status(httpStatus.codeInternalServerError)
+      .json({
+        status: httpStatus.codeInternalServerError,
+        message: err.message,
+      });
   }
 };
 export const deleteProduct = async (req, res) => {
