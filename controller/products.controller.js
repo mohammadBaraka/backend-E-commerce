@@ -136,7 +136,6 @@ export const createProduct = async (req, res) => {
         .json({ message: "No Image Uploaded!" });
 
     const fileName = req.file.path; // Use the correct file path
-    console.log("🚀 ~ createProduct ~ fileName:", fileName);
     const uploadedImage = await cloudinary.uploader.upload(fileName, {
       public_id: req.file.filename,
     });
