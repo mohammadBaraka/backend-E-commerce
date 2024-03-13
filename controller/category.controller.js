@@ -81,9 +81,6 @@ export const deleteCategory = async (req, res) => {
 };
 
 export const updateCategory = async (req, res) => {
-  console.log("Params:", req.params); // Check if params are correct
-  console.log("Body:", req.body); // Check if body data is received
-
   try {
     const { name, icon, color } = req.body;
     const values = { name, icon, color };

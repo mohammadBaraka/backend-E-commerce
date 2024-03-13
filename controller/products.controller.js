@@ -186,20 +186,22 @@ export const updateProduct = async (req, res) => {
     const category = await Category.findById(req.body.category);
     if (!category)
       return res.status(httpStatus.codeBadRequest).send("Invalid Category");
-
     const fileName = req?.file?.path; // Use the correct file path
     const uploadedImage = await cloudinary.uploader.upload(fileName, {
-      public_id: req.file.filename,
+      public_id: req?.file?.filename,
     });
 
-    const image = uploadedImage.secure_url; // Get the secure URL of the uploaded image from Cloudinary
+    const image = uploadedImage?.secure_url;
+
+    console.log("🚀 ~ updateProduct ~ image:", image);
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       {
         name,
         description,
         richDescription: req.body.richDescription,
-        image: req.body.image || image,
+        image,
         brand,
         price,
         category: req.body.category,
@@ -210,6 +212,7 @@ export const updateProduct = async (req, res) => {
       },
       { new: true }
     );
+
     if (!product) {
       return res
         .status(httpStatus.codeNotFound)
