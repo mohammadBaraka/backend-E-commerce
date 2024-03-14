@@ -17,10 +17,11 @@ app.use(
     extended: true,
   })
 );
-
+// const corsOrigin = "http://localhost:5000";
+const corsOrigin = "https://e-commerce-blond-six.vercel.app";
 app.use(
   cors({
-    origin: "https://shopping-app-e-commerce.netlify.app",
+    origin: corsOrigin,
     optionsSuccessStatus: 200,
     credentials: true,
   })
