@@ -20,7 +20,7 @@ app.use(
 
 app.use(
   cors({
-    origin: "https://ecommerce-app-gilt-mu.vercel.app",
+    origin: "https://shopping-app-e-commerce.netlify.app",
     optionsSuccessStatus: 200,
     credentials: true,
   })
